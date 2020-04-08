@@ -163,8 +163,8 @@ mod tests {
         ];
         let value = FieldElement::from(101);
 
-        let G: G1Vector = get_generators("G", 64).into();
-        let H: G1Vector = get_generators("H", 64).into();
+        let G: G1Vector = get_generators("G", 8).into();
+        let H: G1Vector = get_generators("H", 8).into();
         let g = G1::from_msg_hash("g".as_bytes());
         let h = G1::from_msg_hash("h".as_bytes());
 

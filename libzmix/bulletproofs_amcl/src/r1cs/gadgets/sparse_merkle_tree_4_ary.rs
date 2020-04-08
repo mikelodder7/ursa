@@ -252,8 +252,8 @@ mod tests {
         }
 
         // TODO: Use iterators. Generating so many generators at once is very slow. In practice, generators will be persisted.
-        let G: G1Vector = get_generators("G", 8192).into();
-        let H: G1Vector = get_generators("H", 8192).into();
+        let G: G1Vector = get_generators("G", 4096).into();
+        let H: G1Vector = get_generators("H", 4096).into();
 
         let g = G1::from_msg_hash("g".as_bytes());
         let h = G1::from_msg_hash("h".as_bytes());
