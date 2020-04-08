@@ -174,7 +174,7 @@ harness = false
 [package.metadata.deb]
 maintainer = "Hyperledger"
 license-file = ["../LICENSE", "0"]
-copyright = "2019, Hyperledger"
+copyright = "2020, Hyperledger"
 depends = "$auto"
 extended-description = """\
 Rust written reliable, secure, easy-to-use, and pluggable cryptographic implementations."""
@@ -191,7 +191,7 @@ assets = [
 [package.metadata.rpm]
 maintainer = "Hyperledger"
 license-file = ["../LICENSE", "0"]
-copyright = "2018, Hyperledger"
+copyright = "2020, Hyperledger"
 depends = "$auto"
 extended-description = """\
 Rust written reliable, secure, easy-to-use, and pluggable cryptographic implementations."""
