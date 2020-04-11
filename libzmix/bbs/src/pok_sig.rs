@@ -123,18 +123,10 @@ impl PoKOfSignature {
 
         let mut temp: Vec<SignatureMessage> = Vec::new();
         for i in 0..messages.len() {
-            match &messages[i] {
-                ProofMessage::Revealed(r) => temp.push(r.clone()),
-                ProofMessage::Hidden(h) => match h {
-                    HiddenMessage::ProofSpecificBlinding(m) => {
-                        temp.push(m.clone())
-                    },
-                    HiddenMessage::ExternalBlinding(m,b) => {
-                        temp.push(m.clone())
-                    }
-                }
-            }
+            temp.push(messages[i].get_message().clone());
         }
+
+        //let x:&[SignatureMessage] = &messages.iter().map(| m| m.get_message()).collect();
 
 
         let b = compute_b_const_time(&G1::new(), vk, temp.as_slice(), &signature.s, 0);

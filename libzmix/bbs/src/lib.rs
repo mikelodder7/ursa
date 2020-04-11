@@ -41,6 +41,8 @@ use amcl_wrapper::{
 };
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
+use crate::HiddenMessage::{ExternalBlinding, ProofSpecificBlinding};
+use crate::ProofMessage::Revealed;
 
 /// Macros and classes used for creating proofs of knowledge
 #[macro_use]
@@ -215,6 +217,8 @@ impl BlindSignatureContext {
 /// Contains the data from a verifier to a prover
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProofRequest {
+    /// Verifier supplied nonce for freshness
+    pub nonce: SignatureNonce,
     /// Allow the prover to retrieve which messages should be revealed.
     /// Might be prompted in a GUI or CLI
     pub revealed_messages: BTreeSet<usize>,
@@ -237,25 +241,33 @@ pub struct SignatureProof {
     proof: PoKOfSignatureProof,
 }
 
+/// Two types of message may be included in a proof
+/// Revealed and Hidden
 pub enum ProofMessage {
+    /// Revealed messages are shown to a verifier
     Revealed(SignatureMessage),
+    /// Hidden messages are not shown to a verifier
     Hidden(HiddenMessage)
 }
 
 impl ProofMessage{
+    /// Returns the SignatureMessage from a ProofMessage
     pub fn get_message(&self) -> SignatureMessage {
-        match *self {
-            ProofMessage::Revealed(r) => r,
+        match &*self {
+            Revealed(r) => r.clone(),
             ProofMessage::Hidden(h) => match h {
-                HiddenMessage::ProofSpecificBlinding(p) => p,
-                HiddenMessage::ExternalBlinding(m,_) => m
+                ProofSpecificBlinding(p) => p.clone(),
+                ExternalBlinding(m,_) => m.clone()
             }
         }
     }
 }
 
+/// Two types of hidden messages may be contained in a proof
 pub enum HiddenMessage {
+    /// Those whose blinding may be generated as it is used
     ProofSpecificBlinding(SignatureMessage),
+    /// Those whose blinding is shared by other Messages
     ExternalBlinding(SignatureMessage, SignatureNonce)
 }
 

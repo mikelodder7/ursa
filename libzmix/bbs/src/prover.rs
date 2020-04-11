@@ -97,33 +97,25 @@ impl Prover {
 
     /// Create a new signature proof of knowledge and selective disclosure proof
     /// from a verifier's request
-    ///
-    /// # Arguments
-    /// * `request` - Proof request from verifier
-    /// * `proof_messages` -
-    /// If blinding_factor is Some(Nonce) then it will use that.
-    /// If None, a blinding factor will be generated at random.
-    pub fn commit_signature_pok(
+    pub fn new_signature_pok(
         request: &ProofRequest,
         proof_messages: &[ProofMessage],
-        signature: &Signature,
-    ) -> Result<PoKOfSignature, BBSError> {
-        PoKOfSignature::init(
+        signature: &Signature
+    ) -> Result<SignatureProof, BBSError> {
+        let pok = PoKOfSignature::init(
             &signature,
             &request.verification_key,
             proof_messages
-        )
-    }
+        )?;
+        let mut challenge_bytes = pok.to_bytes();
+        challenge_bytes.extend_from_slice(request.nonce.to_bytes().as_slice());
 
-    pub fn generate_signature_pok(
-        pok_sig: &PoKOfSignature,
-        challenge: &SignatureNonce
-    ) -> Result<SignatureProof, BBSError> {
-
-        let proof = pok_sig.gen_proof(&challenge)?;
+        let challenge_hash = SignatureMessage::from_msg_hash(&challenge_bytes);
+        let revealed_messages = pok.revealed_messages.clone();
+        let proof = pok.gen_proof(&challenge_hash)?;
 
         Ok(SignatureProof {
-            revealed_messages: pok_sig.revealed_messages.clone(),
+            revealed_messages,
             proof,
         })
     }

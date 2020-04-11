@@ -29,6 +29,7 @@ impl Verifier {
             }
         }
         Ok(ProofRequest {
+            nonce: SignatureNonce::random(),
             revealed_messages,
             verification_key: verkey.clone(),
         })
