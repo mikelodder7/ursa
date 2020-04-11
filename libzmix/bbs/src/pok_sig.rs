@@ -126,9 +126,6 @@ impl PoKOfSignature {
             temp.push(messages[i].get_message().clone());
         }
 
-        //let x:&[SignatureMessage] = &messages.iter().map(| m| m.get_message()).collect();
-
-
         let b = compute_b_const_time(&G1::new(), vk, temp.as_slice(), &signature.s, 0);
         let a_prime = &signature.a * &r1;
         let a_bar = &(&b * &r1) - &(&a_prime * &signature.e);

@@ -10,7 +10,6 @@ pub struct Verifier;
 
 impl Verifier {
     /// Create a nonce used for the zero-knowledge proof context
-    /// verkey: issuer's public key
     pub fn new_proof_request(
         revealed_message_indices: &[usize],
         verkey: &PublicKey,

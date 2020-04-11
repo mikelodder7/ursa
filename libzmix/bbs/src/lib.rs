@@ -217,8 +217,7 @@ impl BlindSignatureContext {
 /// Contains the data from a verifier to a prover
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProofRequest {
-    /// Verifier supplied nonce for freshness
-    pub nonce: SignatureNonce,
+    nonce: SignatureNonce,
     /// Allow the prover to retrieve which messages should be revealed.
     /// Might be prompted in a GUI or CLI
     pub revealed_messages: BTreeSet<usize>,
@@ -242,7 +241,6 @@ pub struct SignatureProof {
 }
 
 /// Two types of message may be included in a proof
-/// Revealed and Hidden
 pub enum ProofMessage {
     /// Revealed messages are shown to a verifier
     Revealed(SignatureMessage),
