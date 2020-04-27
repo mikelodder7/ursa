@@ -600,13 +600,13 @@ mod tests {
         let proof_cp = PoKOfSignatureProof::from_bytes(&proof_bytes);
         assert!(proof_cp.is_ok());
         let proof_cp = proof_cp.unwrap();
-        assert!(proof_cp == proof);
+        assert_eq!(proof_cp, proof);
 
         let proof_bytes = proof.to_bytes_compressed_form();
         let proof_cp = PoKOfSignatureProof::from_bytes_compressed_form(&proof_bytes);
         assert!(proof_cp.is_ok());
         let proof_cp = proof_cp.unwrap();
-        assert!(proof_cp == proof);
+        assert_eq!(proof_cp, proof);
 
         // The verifier generates the challenge on its own.
         let challenge_bytes = proof.get_bytes_for_challenge(BTreeSet::new(), &verkey);
