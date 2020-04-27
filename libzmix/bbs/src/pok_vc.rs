@@ -108,7 +108,7 @@ macro_rules! impl_PoK_VC {
     ( $ProverCommitting:ident, $ProverCommitted:ident, $Proof:ident, $group_element:ident, $group_element_vec:ident, $group_element_size:expr, $group_element_compressed_size:expr ) => {
         /// Proof of knowledge of messages in a vector commitment.
         /// Commit for each message or blinding factor used
-        #[derive(Clone, Debug, Serialize, Deserialize)]
+        #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
         pub struct $ProverCommitting {
             /// The generators to use as the bases
             pub gens: $group_element_vec,
@@ -116,7 +116,7 @@ macro_rules! impl_PoK_VC {
         }
 
         /// Receive or generate challenge. Compute response and proof
-        #[derive(Clone, Debug, Serialize, Deserialize)]
+        #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
         pub struct $ProverCommitted {
             /// The generators to use as the bases
             pub gens: $group_element_vec,
@@ -126,7 +126,7 @@ macro_rules! impl_PoK_VC {
         }
 
         /// A proof of knowledge of a signature and hidden messages
-        #[derive(Clone, Debug, Serialize, Deserialize)]
+        #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
         pub struct $Proof {
             /// The proof commitment of all base_0*exp_0+base_1*exp_1
             pub commitment: $group_element,
@@ -518,6 +518,8 @@ macro_rules! test_PoK_VC {
         );
         let res_proof_cp = $Proof::from_bytes(&proof_bytes);
         assert!(res_proof_cp.is_ok());
+        let res_proof_cp = res_proof_cp.unwrap();
+        assert_eq!(res_proof_cp, proof);
 
         // Unequal number of generators and responses
         let mut gens_1 = gens.clone();

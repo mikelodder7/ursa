@@ -134,7 +134,7 @@ pub trait CompressedForm {
 
 /// Contains the data used for computing a blind signature and verifying
 /// proof of hidden messages from a prover
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct BlindSignatureContext {
     /// The blinded signature commitment
     pub commitment: BlindedSignatureCommitment,
@@ -277,7 +277,7 @@ impl CompressedForm for BlindSignatureContext {
 }
 
 /// Contains the data from a verifier to a prover
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ProofRequest {
     /// Allow the prover to retrieve which messages should be revealed.
     /// Might be prompted in a GUI or CLI
@@ -332,7 +332,7 @@ impl CompressedForm for ProofRequest {
 }
 
 /// Contains the data from a prover to a verifier
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct SignatureProof {
     /// The revealed messages as field elements
     pub revealed_messages: BTreeMap<usize, SignatureMessage>,
@@ -478,6 +478,7 @@ mod tests {
         let pr_1 = ProofRequest::from_bytes_compressed_form(&bytes);
         assert!(pr_1.is_ok());
         let pr_1 = pr_1.unwrap();
+        assert_eq!(pr_1, pr);
         let bytes_1 = pr_1.to_bytes_compressed_form();
         assert_eq!(bytes[..], bytes_1[..]);
     }
@@ -496,7 +497,9 @@ mod tests {
         let bytes = b.to_bytes();
         let res = BlindSignatureContext::from_bytes(&bytes);
         assert!(res.is_ok());
-        assert_eq!(res.unwrap().to_bytes(), bytes);
+        let res = res.unwrap();
+        assert_eq!(res, b);
+        assert_eq!(res.to_bytes(), bytes);
 
         let b = BlindSignatureContext {
             commitment: G1::generator(),
@@ -511,6 +514,12 @@ mod tests {
         let res = BlindSignatureContext::from_bytes(&bytes);
         assert!(res.is_ok());
         assert_eq!(res.unwrap().to_bytes(), bytes);
+
+        let comp_bytes = b.to_compressed_bytes();
+        let res = BlindSignatureContext::from_compressed_bytes(&comp_bytes);
+        assert!(res.is_ok());
+        let res = res.unwrap();
+        assert_eq!(res, b);
     }
 
     #[test]
@@ -537,6 +546,8 @@ mod tests {
 
         let proof_dup = SignatureProof::from_bytes(&proof_bytes);
         assert!(proof_dup.is_ok());
+        let proof_dup = proof_dup.unwrap();
+        assert_eq!(proof_dup, proof);
 
         let (pk, sk) = Issuer::new_keys(1).unwrap();
         let messages = vec![SignatureMessage::random()];
@@ -553,27 +564,36 @@ mod tests {
 
         let sig_proof = Prover::generate_signature_pok(pok, &challenge).unwrap();
 
-        assert!(
+        assert_eq!(
             Verifier::verify_signature_pok(&pr, &sig_proof, &nonce)
                 .unwrap()
-                .len()
-                == 1
+                .len(),
+            1
         );
         let sig_proof_bytes = sig_proof.to_bytes();
 
         let sig_proof_dup = SignatureProof::from_bytes(&sig_proof_bytes);
         assert!(sig_proof_dup.is_ok());
         let sig_proof_dup = sig_proof_dup.unwrap();
-        assert!(
+        assert_eq!(sig_proof_dup, sig_proof);
+        assert_eq!(
             Verifier::verify_signature_pok(&pr, &sig_proof_dup, &nonce)
                 .unwrap()
-                .len()
-                == 1
+                .len(),
+            1
         );
 
         let sig_proof_bytes = sig_proof.to_bytes_compressed_form();
 
         let sig_proof_dup = SignatureProof::from_bytes_compressed_form(&sig_proof_bytes);
         assert!(sig_proof_dup.is_ok());
+        let sig_proof_dup = sig_proof_dup.unwrap();
+        assert_eq!(sig_proof_dup, sig_proof);
+        assert_eq!(
+            Verifier::verify_signature_pok(&pr, &sig_proof_dup, &nonce)
+                .unwrap()
+                .len(),
+            1
+        );
     }
 }

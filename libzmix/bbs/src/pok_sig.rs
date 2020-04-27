@@ -24,7 +24,7 @@ pub mod prelude {
 /// to construct `PoKOfSignatureProof`.
 ///
 /// XXX: An optimization would be to combine the 2 relations into one by using the same techniques as Bulletproofs
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct PoKOfSignature {
     /// A' in section 4.5
     pub a_prime: G1,
@@ -88,7 +88,7 @@ impl Display for PoKOfSignatureProofStatus {
 /// The actual proof that is sent from prover to verifier.
 ///
 /// Contains the proof of 2 discrete log relations.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct PoKOfSignatureProof {
     /// A' in section 4.5
     pub a_prime: G1,
@@ -599,10 +599,14 @@ mod tests {
         let proof_bytes = proof.to_bytes();
         let proof_cp = PoKOfSignatureProof::from_bytes(&proof_bytes);
         assert!(proof_cp.is_ok());
+        let proof_cp = proof_cp.unwrap();
+        assert!(proof_cp == proof);
 
         let proof_bytes = proof.to_bytes_compressed_form();
         let proof_cp = PoKOfSignatureProof::from_bytes_compressed_form(&proof_bytes);
         assert!(proof_cp.is_ok());
+        let proof_cp = proof_cp.unwrap();
+        assert!(proof_cp == proof);
 
         // The verifier generates the challenge on its own.
         let challenge_bytes = proof.get_bytes_for_challenge(BTreeSet::new(), &verkey);
