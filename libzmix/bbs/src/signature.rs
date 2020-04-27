@@ -58,13 +58,13 @@ macro_rules! sig_byte_impl {
 
 macro_rules! sig_compressed_impl {
     ($type:ident) => {
-        impl $crate::CompressedBytes for $type {
+        impl $crate::CompressedForm for $type {
             type Output = $type;
             type Error = $crate::BBSError;
 
             /// Convert the signature to bytes using compressed form.
-            pub fn to_bytes_compressed_form(&self) -> [u8; COMPRESSED_SIGNATURE_SIZE] {
-                let mut out = [0u8; COMPRESSED_SIGNATURE_SIZE];
+            fn to_bytes_compressed_form(&self) -> Vec<u8> {
+                let mut out = vec![0u8; COMPRESSED_SIGNATURE_SIZE];
                 out[..FIELD_ORDER_ELEMENT_SIZE].copy_from_slice(&self.a.to_compressed_bytes()[..]);
                 let end = FIELD_ORDER_ELEMENT_SIZE + CURVE_ORDER_ELEMENT_SIZE;
                 out[FIELD_ORDER_ELEMENT_SIZE..end]
@@ -74,7 +74,7 @@ macro_rules! sig_compressed_impl {
             }
 
             /// Convert from raw bytes. Use when sending over the wire
-            fn from_compressed_bytes<I: AsRef<[u8]>>(data: I) -> Result<Self, BBSError> {
+            fn from_bytes_compressed_form<I: AsRef<[u8]>>(data: I) -> Result<Self, BBSError> {
                 let data = data.as_ref();
                 if data.len() != COMPRESSED_SIGNATURE_SIZE {
                     return Err(BBSErrorKind::InvalidNumberOfBytes(
@@ -322,7 +322,7 @@ mod tests {
     use super::*;
     use crate::keys::generate;
     use crate::pok_vc::ProverCommittingG1;
-    use crate::{CompressedBytes, SignatureMessageVector};
+    use crate::{CompressedForm, SignatureMessageVector};
 
     #[test]
     fn signature_serialization() {
@@ -338,7 +338,7 @@ mod tests {
 
         let bytes = sig.to_bytes_compressed_form();
         assert_eq!(bytes.len(), COMPRESSED_SIGNATURE_SIZE);
-        let sig_2 = Signature::from_compressed_bytes(bytes);
+        let sig_2 = Signature::from_bytes_compressed_form(bytes);
         assert!(sig_2.is_ok());
         assert_eq!(sig, sig_2.unwrap());
     }

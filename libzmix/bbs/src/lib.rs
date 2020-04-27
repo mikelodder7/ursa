@@ -515,8 +515,8 @@ mod tests {
         assert!(res.is_ok());
         assert_eq!(res.unwrap().to_bytes(), bytes);
 
-        let comp_bytes = b.to_compressed_bytes();
-        let res = BlindSignatureContext::from_compressed_bytes(&comp_bytes);
+        let comp_bytes = b.to_bytes_compressed_form();
+        let res = BlindSignatureContext::from_bytes_compressed_form(&comp_bytes);
         assert!(res.is_ok());
         let res = res.unwrap();
         assert_eq!(res, b);
