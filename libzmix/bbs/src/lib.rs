@@ -132,46 +132,6 @@ pub trait CompressedForm {
     fn from_bytes_compressed_form<I: AsRef<[u8]>>(data: I) -> Result<Self::Output, Self::Error>;
 }
 
-impl CompressedBytes for CurveOrderElement {
-    type Output = CurveOrderElement;
-    type Error = BBSError;
-
-    /// Convert to raw bytes
-    fn to_compressed_bytes(&self) -> Vec<u8> {
-        self.to_compressed_bytes().to_vec()
-    }
-
-    /// Convert from raw bytes for this implementor
-    fn from_compressed_bytes<I: AsRef<[u8]>>(data: I) -> Result<Self::Output, Self::Error> {
-        let data = data.as_ref();
-        if data.len() != CURVE_ORDER_ELEMENT_SIZE {
-            return Err(
-                BBSErrorKind::InvalidNumberOfBytes(CURVE_ORDER_ELEMENT_SIZE, data.len()).into(),
-            );
-        }
-        Ok(Self::from(array_ref!(data, 0, CURVE_ORDER_ELEMENT_SIZE)))
-    }
-}
-
-impl CompressedBytes for G1 {
-    type Output = G1;
-    type Error = BBSError;
-
-    /// Convert to raw bytes
-    fn to_compressed_bytes(&self) -> Vec<u8> {
-        self.to_compressed_bytes().to_vec()
-    }
-
-    /// Convert from raw bytes for this implementor
-    fn from_compressed_bytes<I: AsRef<[u8]>>(data: I) -> Result<Self::Output, Self::Error> {
-        let data = data.as_ref();
-        if data.len() != MESSAGE_SIZE {
-            return Err(BBSErrorKind::InvalidNumberOfBytes(MESSAGE_SIZE, data.len()).into());
-        }
-        Ok(Self::from(array_ref!(data, 0, MESSAGE_SIZE)))
-    }
-}
-
 /// Contains the data used for computing a blind signature and verifying
 /// proof of hidden messages from a prover
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -505,30 +465,9 @@ impl CompressedForm for SignatureProof {
 
 #[cfg(test)]
 mod tests {
-    use super::CurveOrderElement;
     use crate::prelude::*;
     use amcl_wrapper::{group_elem::GroupElement, group_elem_g1::G1};
     use std::collections::BTreeMap;
-
-    #[test]
-    fn curve_order_compressed_test() {
-        let point = CurveOrderElement::random();
-        let comp_bytes = point.to_compressed_bytes();
-        let point_1 = CurveOrderElement::from_compressed_bytes(&comp_bytes);
-        assert!(point_1.is_ok());
-        let point_1 = point_1.unwrap();
-        assert_eq!(point_1, point);
-    }
-
-    #[test]
-    fn g1_compressed_test() {
-        let point = G1::random();
-        let comp_bytes = <G1 as CompressedBytes>::to_compressed_bytes(&point);
-        let point_1 = G1::from_compressed_bytes(&comp_bytes);
-        assert!(point_1.is_ok());
-        let point_1 = point_1.unwrap();
-        assert_eq!(point_1, point);
-    }
 
     #[test]
     fn proof_request_bytes_test() {
