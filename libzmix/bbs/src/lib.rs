@@ -132,6 +132,46 @@ pub trait CompressedForm {
     fn from_bytes_compressed_form<I: AsRef<[u8]>>(data: I) -> Result<Self::Output, Self::Error>;
 }
 
+impl CompressedBytes for CurveOrderElement {
+    type Output = CurveOrderElement;
+    type Error = BBSError;
+
+    /// Convert to raw bytes
+    fn to_compressed_bytes(&self) -> Vec<u8> {
+        self.to_compressed_bytes().to_vec()
+    }
+
+    /// Convert from raw bytes for this implementor
+    fn from_compressed_bytes<I: AsRef<[u8]>>(data: I) -> Result<Self::Output, Self::Error> {
+        let data = data.as_ref();
+        if data.len() != CURVE_ORDER_ELEMENT_SIZE {
+            return Err(
+                BBSErrorKind::InvalidNumberOfBytes(CURVE_ORDER_ELEMENT_SIZE, data.len()).into(),
+            );
+        }
+        Ok(Self::from(array_ref!(data, 0, CURVE_ORDER_ELEMENT_SIZE)))
+    }
+}
+
+impl CompressedBytes for G1 {
+    type Output = G1;
+    type Error = BBSError;
+
+    /// Convert to raw bytes
+    fn to_compressed_bytes(&self) -> Vec<u8> {
+        self.to_compressed_bytes().to_vec()
+    }
+
+    /// Convert from raw bytes for this implementor
+    fn from_compressed_bytes<I: AsRef<[u8]>>(data: I) -> Result<Self::Output, Self::Error> {
+        let data = data.as_ref();
+        if data.len() != MESSAGE_SIZE {
+            return Err(BBSErrorKind::InvalidNumberOfBytes(MESSAGE_SIZE, data.len()).into());
+        }
+        Ok(Self::from(array_ref!(data, 0, MESSAGE_SIZE)))
+    }
+}
+
 /// Contains the data used for computing a blind signature and verifying
 /// proof of hidden messages from a prover
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
