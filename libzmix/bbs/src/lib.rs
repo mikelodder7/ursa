@@ -505,9 +505,30 @@ impl CompressedForm for SignatureProof {
 
 #[cfg(test)]
 mod tests {
+    use super::CurveOrderElement;
     use crate::prelude::*;
     use amcl_wrapper::{group_elem::GroupElement, group_elem_g1::G1};
     use std::collections::BTreeMap;
+
+    #[test]
+    fn curve_order_compressed_test() {
+        let point = CurveOrderElement::random();
+        let comp_bytes = point.to_compressed_bytes();
+        let point_1 = CurveOrderElement::from_compressed_bytes(&comp_bytes);
+        assert!(point_1.is_ok());
+        let point_1 = point_1.unwrap();
+        assert_eq!(point_1, point);
+    }
+
+    #[test]
+    fn g1_compressed_test() {
+        let point = G1::random();
+        let comp_bytes = <G1 as CompressedBytes>::to_compressed_bytes(&point);
+        let point_1 = G1::from_compressed_bytes(&comp_bytes);
+        assert!(point_1.is_ok());
+        let point_1 = point_1.unwrap();
+        assert_eq!(point_1, point);
+    }
 
     #[test]
     fn proof_request_bytes_test() {
