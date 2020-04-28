@@ -43,25 +43,54 @@ macro_rules! sig_byte_impl {
             *array_ref![out, 0, SIGNATURE_SIZE]
         }
 
-        /// Convert the signature to bytes using compressed form.
-        pub fn to_bytes_compressed_form(&self) -> [u8; COMPRESSED_SIGNATURE_SIZE] {
-            let mut out = [0u8; COMPRESSED_SIGNATURE_SIZE];
-            out[..FIELD_ORDER_ELEMENT_SIZE].copy_from_slice(&self.a.to_compressed_bytes()[..]);
-            let end = FIELD_ORDER_ELEMENT_SIZE + CURVE_ORDER_ELEMENT_SIZE;
-            out[FIELD_ORDER_ELEMENT_SIZE..end].copy_from_slice(&self.e.to_compressed_bytes()[..]);
-            out[end..].copy_from_slice(&self.s.to_compressed_bytes()[..]);
-            out
-        }
-
         /// Convert the byte slice into a Signature
         pub fn from_bytes(data: [u8; SIGNATURE_SIZE]) -> Self {
             let mut index = 0;
             let a = G1::from_slice(&data[..GROUP_G1_SIZE]).unwrap();
             index += GROUP_G1_SIZE;
-            let e = SignatureNonce::from(*array_ref![data, index, FIELD_ORDER_ELEMENT_SIZE]);
+            let e = SignatureNonce::from(array_ref![data, index, FIELD_ORDER_ELEMENT_SIZE]);
             index += FIELD_ORDER_ELEMENT_SIZE;
-            let s = SignatureNonce::from(*array_ref![data, index, FIELD_ORDER_ELEMENT_SIZE]);
+            let s = SignatureNonce::from(array_ref![data, index, FIELD_ORDER_ELEMENT_SIZE]);
             Self { a, e, s }
+        }
+    };
+}
+
+macro_rules! sig_compressed_impl {
+    ($type:ident) => {
+        impl $crate::CompressedForm for $type {
+            type Output = $type;
+            type Error = $crate::BBSError;
+
+            /// Convert the signature to bytes using compressed form.
+            fn to_bytes_compressed_form(&self) -> Vec<u8> {
+                let mut out = vec![0u8; COMPRESSED_SIGNATURE_SIZE];
+                out[..FIELD_ORDER_ELEMENT_SIZE].copy_from_slice(&self.a.to_compressed_bytes()[..]);
+                let end = FIELD_ORDER_ELEMENT_SIZE + CURVE_ORDER_ELEMENT_SIZE;
+                out[FIELD_ORDER_ELEMENT_SIZE..end]
+                    .copy_from_slice(&self.e.to_compressed_bytes()[..]);
+                out[end..].copy_from_slice(&self.s.to_compressed_bytes()[..]);
+                out
+            }
+
+            /// Convert from raw bytes. Use when sending over the wire
+            fn from_bytes_compressed_form<I: AsRef<[u8]>>(data: I) -> Result<Self, BBSError> {
+                let data = data.as_ref();
+                if data.len() != COMPRESSED_SIGNATURE_SIZE {
+                    return Err(BBSErrorKind::InvalidNumberOfBytes(
+                        COMPRESSED_SIGNATURE_SIZE,
+                        data.len(),
+                    )
+                    .into());
+                }
+                let mut index = 0;
+                let a = G1::from(array_ref!(data, index, FIELD_ORDER_ELEMENT_SIZE));
+                index += FIELD_ORDER_ELEMENT_SIZE;
+                let e = SignatureNonce::from(array_ref![data, index, CURVE_ORDER_ELEMENT_SIZE]);
+                index += CURVE_ORDER_ELEMENT_SIZE;
+                let s = SignatureNonce::from(array_ref![data, index, CURVE_ORDER_ELEMENT_SIZE]);
+                Ok(Self { a, e, s })
+            }
         }
     };
 }
@@ -165,6 +194,8 @@ impl BlindSignature {
     sig_byte_impl!();
 }
 
+sig_compressed_impl!(BlindSignature);
+
 /// A BBS+ signature.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Signature {
@@ -229,6 +260,8 @@ impl Signature {
     sig_byte_impl!();
 }
 
+sig_compressed_impl!(Signature);
+
 fn prep_vec_for_b(
     public_key: &PublicKey,
     messages: &[SignatureMessage],
@@ -289,7 +322,7 @@ mod tests {
     use super::*;
     use crate::keys::generate;
     use crate::pok_vc::ProverCommittingG1;
-    use crate::SignatureMessageVector;
+    use crate::{CompressedForm, SignatureMessageVector};
 
     #[test]
     fn signature_serialization() {
@@ -305,8 +338,9 @@ mod tests {
 
         let bytes = sig.to_bytes_compressed_form();
         assert_eq!(bytes.len(), COMPRESSED_SIGNATURE_SIZE);
-        let sig_2 = Signature::from(bytes);
-        assert_eq!(sig, sig_2);
+        let sig_2 = Signature::from_bytes_compressed_form(bytes);
+        assert!(sig_2.is_ok());
+        assert_eq!(sig, sig_2.unwrap());
     }
 
     #[test]
